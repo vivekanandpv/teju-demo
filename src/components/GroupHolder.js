@@ -3,14 +3,16 @@ import { baseData } from '../data';
 import AllGroups from './AllGroups';
 
 class GroupHolder extends Component {
-  state = { groupsData: [...baseData], selectedGroup: 'att' };
+  state = { groupsData: [...baseData], selectedGroup: 'att', searchTerm: '' };
   onAccountSelection = (a) => {
     this.setState((state, props) => {
       state.groupsData
         .filter((g) => {
           return g.groupName === a.groupName;
         })[0]
-        .accounts.filter((ac) => ac === a)[0].isSelected = !a.isSelected;
+        .accounts.filter((ac) => {
+          return ac.id === a.id;
+        })[0].isSelected = !a.isSelected;
       return JSON.parse(JSON.stringify(state));
     });
   };
@@ -26,13 +28,15 @@ class GroupHolder extends Component {
         g.accounts = g.accounts.filter((a) => !a.isSelected);
       });
 
-      selectedAccounts.forEach((a) => (a.isSelected = false));
+      selectedAccounts.forEach((a) => {
+        a.isSelected = false;
+        a.groupName = this.state.selectedGroup;
+      });
 
       state.groupsData
         .filter((g) => g.groupName === state.selectedGroup)[0]
         .accounts.push(...selectedAccounts);
 
-      console.log('Collated', selectedAccounts);
       return JSON.parse(JSON.stringify(state));
     });
   };
@@ -49,15 +53,21 @@ class GroupHolder extends Component {
     );
   };
 
+  handleSearchTerm = (val) => {
+    this.setState({ searchTerm: val });
+  };
+
   getGroupNames = () => {
-    return this.state.groupsData
-      .filter((g) => g.groupName !== 'ungrouped')
-      .map((g) => g.groupName)
-      .map((g, i) => (
-        <option value={g} key={i}>
-          {g}
-        </option>
-      ));
+    return (
+      this.state.groupsData
+        // .filter((g) => g.groupName !== 'ungrouped')
+        .map((g) => g.groupName)
+        .map((g, i) => (
+          <option value={g} key={i}>
+            {g}
+          </option>
+        ))
+    );
   };
 
   render() {
@@ -75,12 +85,23 @@ class GroupHolder extends Component {
             </select>
           </div>
         </div>
+        <div className='my-2 w-25'>
+          <div className='form-group'>
+            <label>Search</label>
+            <input
+              type='text'
+              className='form-control'
+              onInput={(e) => this.handleSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
         <div className='d-flex  align-items-center justify-content-around'>
           <div className='card col-md-4'>
             <div className='card-body'>
               <AllGroups
                 groups={this.getUnselectedGroupData()}
                 onSelection={this.onAccountSelection}
+                searchTerm={this.state.searchTerm}
               />
             </div>
           </div>
